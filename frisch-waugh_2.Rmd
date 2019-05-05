@@ -1,0 +1,82 @@
+---
+title: "frisch_waugh"
+output: html_document
+---
+
+```{r}
+library("dplyr")
+library("tidyr")
+library("ggplot2")
+
+set.seed(2)
+rnorm_data = rnorm(1000, 10, 1)
+plt_x = seq(min(rnorm_data), max(rnorm_data),length=500)
+plt_density_curve = dnorm(plt_x, mean=mean(rnorm_data), sd=sd(rnorm_data))
+hist(rnorm_data, freq=FALSE)
+lines(plt_x, plt_density_curve,type="l",col="blue")
+```
+
+```{r}
+n = 10000
+# x1 = runif(n, min=-100, max=100)
+x1 = seq(-100, 100,length=n)
+x2 = rnorm(n, mean=2, sd=10)
+x3 = as.numeric(x1 > 20 & x1 < 50)*300
+y = 2*x1 + 7*x2 + x3
+df = data.frame(x1, x2, x3, y)
+```
+
+```{r}
+ggplot(df) + geom_point(aes(x=x1,y=y,color=x2))
+```
+```{r}
+ggplot(df) + geom_point(aes(x=x2,y=y,color=x3))
+```
+
+```{r}
+lm(y ~ x1 + x2 + x3, data=df)
+```
+
+```{r}
+output_r1 = lm(y ~ x1 + x3, data=df)
+output_r1_coefs = output_r1$coefficients
+output_r1_fittedvalues = output_r1$fitted.values
+output_r1_residuals = output_r1$residuals
+df$r1_fitted = output_r1_fittedvalues
+df$r1_residuals = output_r1_residuals
+output_r1
+```
+
+```{r}
+output_r2 = lm(x2 ~ x1 + x3, data=df)
+output_r2_residuals = output_r2$residuals
+df$r2_residuals = output_r2_residuals
+df$r2_fitted = output_r2$fitted.values
+output_r2
+```
+
+```{r}
+output_r3 = lm(r1_residuals ~ r2_residuals, data=df)
+df$r3_fitted = output_r3$fitted.values
+df$r3_residuals = output_r3$residuals
+output_r3
+```
+
+```{r}
+ggplot(df) + 
+  geom_point(aes(x=x1,y=y),color="blue") +
+  geom_point(aes(x=x1,y=r1_fitted),color="red") +
+  geom_point(aes(x=x1,y=r1_residuals),color="green")
+
+ggplot(df) + 
+  geom_point(aes(x=x1,y=x2),color="blue") +
+  geom_point(aes(x=x1,y=r2_fitted),color="red") +
+  geom_point(aes(x=x1,y=r2_residuals),color="green")
+
+ggplot(df) + 
+  geom_point(aes(x=r2_residuals,y=r1_residuals),color="blue") +
+  geom_point(aes(x=r2_residuals,y=r3_fitted),color="red") +
+  geom_point(aes(x=r2_residuals,y=r3_residuals),color="green")
+
+```
+
